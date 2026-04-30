@@ -1,27 +1,37 @@
 import os
-import asyncio
-from flask import Flask
+from flask import Flask, request, session, redirect, url_for, render_template, jsonify, flash
 from flask_socketio import SocketIO
 from config import Config
-from core.dns_server import start_dns_servers
-from management.admin import admin_bp
-from management.api import api_bp
-from monitoring.metrics import metrics_bp
-from security.auth import auth_bp
-from anonymity.no_log_mode import NoLogMode
+import threading
 
 app = Flask(__name__)
 app.secret_key = Config.SECRET_KEY
-socketio = SocketIO(app, cors_allowed_origins="*")
-
-# Register blueprints
-app.register_blueprint(admin_bp, url_prefix='/admin')
-app.register_blueprint(api_bp, url_prefix='/api')
-app.register_blueprint(metrics_bp, url_prefix='/metrics')
-app.register_blueprint(auth_bp, url_prefix='/auth')
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
 # Initialize components
-no_log = NoLogMode()
+cloudflare_tunnel = None
+node_manager = None
+
+def init_components():
+    global cloudflare_tunnel, node_manager
+    
+    from cloudflare_tunnel import CloudflareTunnel
+    from node_manager import NodeManager
+    
+    cloudflare_tunnel = CloudflareTunnel()
+    node_manager = NodeManager()
+    
+    # Start Cloudflare Tunnel if enabled
+    if os.getenv('ENABLE_CLOUDFLARE_TUNNEL', 'false').lower() == 'true':
+        def start_tunnel():
+            url = cloudflare_tunnel.start()
+            if url:
+                node_manager.register_node('primary', url, 'Cloudflare Tunnel')
+                print(f"🌐 Public URL: {url}")
+        
+        threading.Thread(target=start_tunnel, daemon=True).start()
+
+# ==================== ROUTES ====================
 
 @app.route('/health')
 def health():
@@ -32,16 +42,116 @@ def doh_endpoint():
     from core.resolver import resolve_doh
     return resolve_doh()
 
-@app.route('/dns-query-tls', methods=['POST'])
-def dot_endpoint():
-    from core.resolver import resolve_dot
-    return resolve_dot()
+# ==================== ADMIN ROUTES ====================
+
+@app.route('/admin/login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        if request.form.get('password') == Config.ADMIN_PASSWORD:
+            session['admin'] = True
+            return redirect(url_for('admin_dashboard'))
+        return render_template('admin/login.html', error='Invalid password')
+    return render_template('admin/login.html', error=None)
+
+@app.route('/admin/logout')
+def admin_logout():
+    session.pop('admin', None)
+    return redirect(url_for('admin_login'))
+
+@app.route('/admin/')
+@app.route('/admin')
+def admin_dashboard():
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    
+    from monitoring.analytics import Analytics
+    from blocking.blocklist import BlocklistManager
+    
+    analytics = Analytics()
+    bl = BlocklistManager()
+    
+    stats = analytics.get_stats()
+    blocklist_stats = bl.stats()
+    custom_domains = list(bl.custom)
+    
+    # Get tunnel info
+    tunnel_info = cloudflare_tunnel.get_tunnel_info() if cloudflare_tunnel else None
+    
+    # Get all nodes
+    nodes = node_manager.get_nodes() if node_manager else {}
+    
+    return render_template('admin/dashboard.html', 
+                          stats=stats, 
+                          blocklist_stats=blocklist_stats,
+                          custom_domains=custom_domains,
+                          tunnel_info=tunnel_info,
+                          nodes=nodes)
+
+@app.route('/admin/add_domain', methods=['POST'])
+def add_domain():
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    
+    from blocking.blocklist import BlocklistManager
+    bl = BlocklistManager()
+    domain = request.form.get('domain', '').strip()
+    if domain and '.' in domain:
+        bl.add_custom(domain)
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/remove_domain', methods=['POST'])
+def remove_domain():
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    
+    from blocking.blocklist import BlocklistManager
+    bl = BlocklistManager()
+    domain = request.form.get('domain', '').strip()
+    if domain:
+        bl.remove_custom(domain)
+    return redirect(url_for('admin_dashboard'))
+
+@app.route('/admin/refresh')
+def refresh():
+    if not session.get('admin'):
+        return redirect(url_for('admin_login'))
+    
+    from blocking.blocklist import BlocklistManager
+    import threading
+    bl = BlocklistManager()
+    threading.Thread(target=bl.load, daemon=True).start()
+    return redirect(url_for('admin_dashboard'))
+
+# ==================== NODE MANAGEMENT API ====================
+
+@app.route('/api/nodes/register', methods=['POST'])
+def register_node():
+    """Register a new node"""
+    data = request.json
+    node_id = data.get('node_id')
+    url = data.get('url')
+    location = data.get('location', 'Unknown')
+    
+    if node_id and url:
+        node_manager.register_node(node_id, url, location)
+        return jsonify({'status': 'registered', 'node_id': node_id}), 200
+    
+    return jsonify({'error': 'Missing node_id or url'}), 400
+
+@app.route('/api/nodes', methods=['GET'])
+def list_nodes():
+    """List all nodes"""
+    return jsonify(node_manager.get_nodes())
+
+@app.route('/api/nodes/<node_id>', methods=['DELETE'])
+def delete_node(node_id):
+    """Remove a node"""
+    node_manager.remove_node(node_id)
+    return jsonify({'status': 'removed'}), 200
+
+# ==================== MAIN ====================
 
 if __name__ == '__main__':
+    init_components()
     port = int(os.getenv('PORT', 8080))
-    # Start DNS servers in background
-    import threading
-    t = threading.Thread(target=start_dns_servers, daemon=True)
-    t.start()
-    
     socketio.run(app, host='0.0.0.0', port=port, debug=False)

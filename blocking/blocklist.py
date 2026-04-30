@@ -7,7 +7,21 @@ import tldextract
 from config import Config
 
 class BlocklistManager:
+    _instance = None
+    _lock = threading.Lock()
+    
+    def __new__(cls):
+        if cls._instance is None:
+            with cls._lock:
+                if cls._instance is None:
+                    cls._instance = super().__new__(cls)
+        return cls._instance
+    
     def __init__(self):
+        if hasattr(self, '_initialized'):
+            return
+        self._initialized = True
+        
         self.exact = set()
         self.regex = []
         self.wildcard = set()
@@ -16,7 +30,8 @@ class BlocklistManager:
         self.custom_file = Config.CUSTOM_BLOCKLIST
         os.makedirs(os.path.dirname(self.custom_file), exist_ok=True)
         self.load_custom()
-        self.load()
+        # Load blocklists in background
+        threading.Thread(target=self.load, daemon=True).start()
     
     def load_custom(self):
         try:
@@ -44,10 +59,12 @@ class BlocklistManager:
         self.save_custom()
     
     def load(self):
+        print("Loading blocklists...")
         for url in Config.BLOCKLIST_SOURCES:
             try:
                 resp = requests.get(url, timeout=15)
                 self._parse(resp.text, url)
+                print(f"Loaded {url}")
             except Exception as e:
                 print(f"Blocklist error {url}: {e}")
         
@@ -58,9 +75,6 @@ class BlocklistManager:
             r'.*beacon.*', r'.*pixel\..*', r'.*bids?\..*', r'.*pubads.*',
             r'.*adform.*', r'.*criteo.*', r'.*taboola.*', r'.*outbrain.*',
             r'.*hotjar.*', r'.*optimizely.*', r'.*segment.*', r'.*amplitude.*',
-            r'.*mixpanel.*', r'.*bugsnag.*', r'.*sentry.*', r'.*newrelic.*',
-            r'.*admarvel.*', r'.*mobfox.*', r'.*inmobi.*', r'.*pubmatic.*',
-            r'.*rubicon.*', r'.*openx.*', r'.*adtech.*', r'.*smartadserver.*',
         ]
         
         with self.lock:
@@ -69,7 +83,8 @@ class BlocklistManager:
                     self.regex.append(re.compile(p, re.IGNORECASE))
                 except: pass
         
-        print(f"Loaded {len(self.exact)} exact, {len(self.wildcard)} wildcard, {len(self.regex)} regex")
+        with self.lock:
+            print(f"Loaded {len(self.exact)} exact, {len(self.wildcard)} wildcard, {len(self.regex)} regex")
     
     def _parse(self, text, source):
         with self.lock:
@@ -93,39 +108,28 @@ class BlocklistManager:
     def is_blocked(self, domain):
         domain = domain.lower().rstrip('.')
         with self.lock:
-            # Custom blocklist (highest priority)
             if domain in self.custom:
                 return True
-            
-            # Exact match
             if domain in self.exact:
                 return True
-            
-            # Wildcard
-            parts = domain.split('.')
-            for i in range(len(parts)):
-                parent = '.'.join(parts[i:])
-                if parent in self.wildcard:
+            for parent in self.wildcard:
+                if domain.endswith('.' + parent):
                     return True
-            
-            # Regex
             for p in self.regex:
                 if p.search(domain):
                     return True
-            
-            # Subdomain analysis
             ext = tldextract.extract(domain)
             if ext.subdomain:
                 sub = ext.subdomain.lower()
                 if any(x in sub for x in ['ad', 'ads', 'track', 'analytics', 'telemetry']):
                     return True
-        
         return False
     
     def stats(self):
-        return {
-            'exact': len(self.exact),
-            'wildcard': len(self.wildcard),
-            'regex': len(self.regex),
-            'custom': len(self.custom)
-        }
+        with self.lock:
+            return {
+                'exact': len(self.exact),
+                'wildcard': len(self.wildcard),
+                'regex': len(self.regex),
+                'custom': len(self.custom)
+            }

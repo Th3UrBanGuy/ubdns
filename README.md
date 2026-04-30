@@ -1,84 +1,115 @@
-# 🛡️ Advanced DNS Gateway - Railway Deploy Ready
+# 🛡️ Advanced DNS Gateway - Cloudflare Tunnel + Multi-Node
 
-A hacker-grade, fully-featured DNS gateway with **complete anonymity**, advanced ad-blocking, and modern management UI - optimized for Railway deployment.
+A hacker-grade DNS gateway with **Cloudflare Tunnel** for public access, **multi-node support**, and complete anonymity.
 
 ## 🔥 Key Features
 
-### Multi-Protocol DNS
-- ✅ DNS-over-HTTPS (DoH) - Firewall bypass via HTTPS
-- ✅ DNS-over-TLS (DoT) - Available on VPS deployments
-- ✅ Modern admin panel with real-time analytics
+### Public Access via Cloudflare Tunnel
+- ✅ Automatic public URL generation (no port forwarding needed)
+- ✅ Free SSL/HTTPS via Cloudflare
+- ✅ Works behind NAT/firewall
+- ✅ Custom domain support via Cloudflare Dashboard
 
-### 🎯 Advanced Blocking
-- **CNAME Unrolling** - Detects ads hidden behind CDN CNAME chains
-- **DGA Detection** - Blocks Domain Generation Algorithms
-- **Heuristic Analysis** - ML-based ad domain detection
-- **Per-Client Rules** - Different rules per device/IP
+### Multi-Node Architecture
+- ✅ Run multiple DNS nodes across different locations
+- ✅ Central dashboard to manage all nodes
+- ✅ Auto-registration API for new nodes
+- ✅ Health monitoring per node
 
-### 🔒 Anonymity Features
-- **No-Log Mode** - Zero query logging (memory only)
-- **Strip Client IP** - Hash IPs to remove PII
-- **Route Obfuscation** - Random delays to hide patterns
+### Advanced DNS Features
+- ✅ DNS-over-HTTPS (DoH) - Firewall bypass
+- ✅ DNS-over-TLS (DoT) - Available on VPS
+- ✅ CNAME Unrolling, DGA Detection
+- ✅ Complete anonymity mode
 
-### 📊 Modern Management UI
-- **Real-time Dashboard** - Live charts with Chart.js
-- **WebSocket Stream** - Live query feed
-- **JWT API** - Full programmatic control
-- **Prometheus Metrics** - `/metrics` endpoint
+### Modern Management UI
+- ✅ Real-time dashboard with public URLs
+- ✅ Node management interface
+- ✅ Live query analytics
+- ✅ One-click blocklist management
 
-## 🚀 Deploy to Railway (1-Click)
+## 🚀 Quick Deploy with Cloudflare Tunnel
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/YOUR_USERNAME/YOUR_REPO)
+### Option 1: Docker Compose (Recommended)
+```bash
+# Clone repo
+git clone https://github.com/Th3UrBanGuy/ubdns.git
+cd ubdns
 
-### Manual Deployment:
-1. Fork/clone this repo to your GitHub
-2. Create a [Railway account](https://railway.app)
-3. Click "New Project" → "Deploy from GitHub repo"
-4. Select your repo
-5. Railway will auto-detect Python and deploy
-6. Your app will be live at `https://your-app-name.up.railway.app`
+# Start with Cloudflare Tunnel
+echo "726268" | sudo -S docker-compose -f docker-compose.advanced.yml up -d --build
+```
 
-## 🔐 Admin Panel
+### Option 2: Manual with Cloudflared
+```bash
+# Install cloudflared
+wget https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+chmod +x cloudflared-linux-amd64
+sudo mv cloudflared-linux-amd64 /usr/local/bin/cloudflared
 
-- **URL:** `https://your-app-name.up.railway.app/admin/login`
+# Start DNS gateway
+gunicorn -k eventlet -b 0.0.0.0:8080 app:app &
+
+# Start tunnel
+cloudflared tunnel --url http://localhost:8080
+```
+
+## 🔐 Access Information
+
+After deployment, check the dashboard for your **public URLs**:
+
+- **Admin Panel:** `https://xxx.trycloudflare.com/admin/login`
+- **DoH Endpoint:** `https://xxx.trycloudflare.com/dns-query`
 - **Password:** `726268`
 
-### Features:
-- View real-time stats & charts
-- Add/remove custom blocked domains
-- Manage per-client rules
-- Configure anonymity settings
-- Live query stream via WebSocket
-
-## 📱 Device Setup
+## 📱 Connect Your Devices
 
 ### Android (Private DNS)
 1. Settings → Network & Internet → Private DNS
-2. Select "Hostname" and enter: `your-app-name.up.railway.app`
+2. Select "Hostname" and enter: `xxx.trycloudflare.com`
 
 ### Nebulo/Intra Apps
 1. Install Nebulo or Intra
 2. Add custom DoH server:  
-   `https://your-app-name.up.railway.app/dns-query`
+   `https://xxx.trycloudflare.com/dns-query`
 
-## 🌐 Railway-Specific Configuration
+## 🌍 Multi-Node Setup
 
-Railway automatically sets:
-- `PORT` - Exposed port for web traffic (DoH endpoint)
-- Optional: Add Redis add-on for persistent caching (sets `REDIS_URL` automatically)
+Run DNS nodes on multiple VPS/servers and connect them:
 
-### Environment Variables (Optional)
-Set these in Railway dashboard → Variables:
-- `ADMIN_PASSWORD` - Change default admin password
-- `ENABLE_NO_LOG` - "true" (default) for anonymity
-- `REDIS_URL` - Automatically set if you add Redis add-on
+### On each node server:
+```bash
+# Deploy the app (same as above)
+# After deployment, register with main node:
 
-## 🔧 Post-Deployment Steps
+curl -X POST https://MAIN_NODE_URL/api/nodes/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "node_id": "vps-us-1",
+    "url": "https://your-vps-url.trycloudflare.com",
+    "location": "US East"
+  }'
+```
 
-1. Visit your Railway app URL + `/admin/login`
-2. Login with password `726268`
-3. Configure custom blocklist
-4. Set up Private DNS on your Android device
+### View all nodes:
+Visit main dashboard → "Connected Nodes" section
+
+## 🔧 Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ADMIN_PASSWORD` | `726268` | Admin panel password |
+| `ENABLE_CLOUDFLARE_TUNNEL` | `false` | Auto-start Cloudflare Tunnel |
+| `ENABLE_NO_LOG` | `true` | Zero logging mode |
+| `STRIP_CLIENT_IP` | `true` | Hash client IPs |
+
+## 📊 Dashboard Features
+
+1. **Public URLs Display** - Shows Cloudflare Tunnel URLs
+2. **Node Management** - Add/remove DNS nodes
+3. **Live Analytics** - Query stats, blocked domains
+4. **Blocklist Management** - Add/remove custom domains
+5. **One-Click Refresh** - Update public blocklists
 
 ## ⚠️ Legal Notice
 
@@ -86,4 +117,4 @@ This tool is for **educational and personal privacy** purposes. Use responsibly 
 
 ---
 
-**Optimized for Railway deployment - Complete anonymity, unstoppable ad-blocking.**
+**Powered by Cloudflare Tunnel - No port forwarding, no firewall issues, instant public access.**
