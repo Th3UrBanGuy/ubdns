@@ -13,6 +13,7 @@ services:
       - PORT=8080
       - ENABLE_NO_LOG=true
       - ADMIN_PASSWORD=726268
+      - ENABLE_CLOUDFLARE_TUNNEL=true
     volumes:
       - ./data:/app/data
     restart: unless-stopped
