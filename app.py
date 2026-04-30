@@ -40,6 +40,22 @@ def doh_endpoint():
 
 @app.route('/tunnel-info')
 def tunnel_info():
+    """API endpoint to get tunnel info - read directly from file"""
+    try:
+        # Read directly from file (most reliable)
+        with open('data/tunnel_url.txt', 'r') as f:
+            url = f.read().strip()
+        if url:
+            return jsonify({
+                'url': url,
+                'running': True,
+                'doh_url': '{}/dns-query'.format(url),
+                'admin_url': '{}/admin/login'.format(url)
+            })
+    except:
+        pass
+    
+    # Fallback to CloudflareTunnel instance
     if cloudflare_tunnel:
         return jsonify(cloudflare_tunnel.get_tunnel_info())
     return jsonify({'url': None})
