@@ -50,22 +50,23 @@ def extract_tunnel_url(line):
 def start_cloudflared():
     global cloudflared_proc, running
     
-    # Check if using named tunnel (permanent) or quick tunnel
-    tunnel_name = os.getenv('CLOUDFLARE_TUNNEL_NAME')
+    # FORCE permanent tunnel - no fallback to quick tunnel!
+    tunnel_id = os.getenv('CLOUDFLARE_TUNNEL_ID')
     tunnel_token = os.getenv('CLOUDFLARE_TUNNEL_TOKEN')
     
+    if not tunnel_id or not tunnel_token:
+        print("ERROR: CLOUDFLARE_TUNNEL_ID and CLOUDFLARE_TUNNEL_TOKEN must be set!")
+        print("Container will not start Cloudflared!")
+        return
+    
+    print(f"Using PERMANENT tunnel ID: {tunnel_id}")
+    print(f"Token length: {len(tunnel_token)}")
+    
     while running:
-        print("Starting Cloudflare Tunnel...")
+        print("Starting Cloudflare Tunnel (PERMANENT)...")
         
-        if tunnel_name and tunnel_token:
-            # Use named tunnel (permanent URL)
-            print(f"Using named tunnel: {tunnel_name}")
-            cmd = ["cloudflared", "tunnel", "--token", tunnel_token, "run"]
-        else:
-            # Use quick tunnel (temporary URL - changes on restart)
-            print("Using quick tunnel (URL will change on restart)")
-            cmd = ["cloudflared", "tunnel", "--url", "http://localhost:8080", 
-                   "--logfile", "data/cloudflared.log"]
+        # Use tunnel run with token (permanent tunnel)
+        cmd = ["cloudflared", "tunnel", "run", "--token", tunnel_token]
         
         cloudflared_proc = subprocess.Popen(
             cmd,
@@ -75,7 +76,7 @@ def start_cloudflared():
         )
         print(f"Cloudflared started with PID {cloudflared_proc.pid}")
         
-        # Read output to capture URL (for quick tunnels)
+        # Read output to capture URL
         url_found = False
         try:
             for line in cloudflared_proc.stdout:
