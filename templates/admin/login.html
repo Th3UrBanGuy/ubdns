@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>DNS Gateway - Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 flex items-center justify-center min-h-screen">
+    <div class="bg-gray-800 p-8 rounded-xl shadow-2xl w-96 border border-gray-700">
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-green-400">🛡️ DNS Gateway</h1>
+            <p class="text-gray-400 mt-2">Admin Access</p>
+        </div>
+        
+        {% if error %}
+        <div class="bg-red-500/20 border border-red-500 text-red-400 px-4 py-3 rounded mb-4">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="POST">
+            <div class="mb-6">
+                <label class="block text-gray-300 mb-2">Password</label>
+                <input type="password" name="password" 
+                       class="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:border-green-400"
+                       placeholder="Enter admin password" required>
+            </div>
+            <button type="submit" 
+                    class="w-full bg-green-500 hover:bg-green-600 text-gray-900 font-bold py-3 px-4 rounded-lg transition duration-200">
+                Login
+            </button>
+        </form>
+        
+        <p class="text-center text-gray-500 text-sm mt-6">Unauthorized access is prohibited</p>
+    </div>
+</body>
+</html>

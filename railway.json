@@ -1,0 +1,21 @@
+{
+  "build": {
+    "builder": "nixpacks"
+  },
+  "deploy": {
+    "startCommand": "gunicorn -k eventlet app:app",
+    "healthcheckPath": "/health",
+    "restartPolicyType": "on-failure",
+    "numReplicas": 1
+  },
+  "environments": {
+    "production": {
+      "env": {
+        "PYTHON_VERSION": "3.11",
+        "ENABLE_NO_LOG": "true",
+        "STRIP_CLIENT_IP": "true",
+        "OBFUSCATE_QUERIES": "true"
+      }
+    }
+  }
+}

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: dns-gateway-pro
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: ENABLE_NO_LOG
+        value: "true"
+      - key: STRIP_CLIENT_IP
+        value: "true"
+      - key: OBFUSCATE_QUERIES
+        value: "true"

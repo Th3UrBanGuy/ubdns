@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Settings - DNS Gateway</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-900 text-white">
+    <nav class="bg-gray-800 border-b border-gray-700 px-6 py-4">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-green-400">🛡️ DNS Gateway</h1>
+            <a href="/admin/logout" class="text-red-400 hover:text-red-300">Logout</a>
+        </div>
+    </nav>
+    
+    <div class="container mx-auto px-6 py-8">
+        <div class="max-w-4xl mx-auto">
+            <h2 class="text-3xl font-bold mb-8">⚙️ Settings</h2>
+            
+            <!-- Anonymity Settings -->
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 mb-6">
+                <h3 class="text-xl font-bold mb-4">🔒 Anonymity</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span>No-Log Mode</span>
+                        <div class="relative inline-block w-12 h-6 bg-gray-600 rounded-full">
+                            <input type="checkbox" checked class="opacity-0 w-0 h-0" id="noLogToggle">
+                            <span class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-green-400 rounded-full transition"></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span>Strip Client IP</span>
+                        <div class="relative inline-block w-12 h-6 bg-gray-600 rounded-full">
+                            <input type="checkbox" checked class="opacity-0 w-0 h-0" id="stripIpToggle">
+                            <span class="absolute cursor-pointer top-0 left-0 right-0 bottom-0 bg-green-400 rounded-full transition"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Protocol Settings -->
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 mb-6">
+                <h3 class="text-xl font-bold mb-4">🌐 Protocols</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span>DNS-over-HTTPS (DoH)</span>
+                        <span class="text-green-400">✓ Enabled</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span>DNS-over-TLS (DoT)</span>
+                        <span class="text-green-400">✓ Enabled</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span>DNS-over-QUIC (DoQ)</span>
+                        <span class="text-gray-500">Coming Soon</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Information -->
+            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700">
+                <h3 class="text-xl font-bold mb-4">ℹ️ DNS Configuration</h3>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-gray-400 text-sm mb-2">DoH URL</p>
+                        <code class="block bg-gray-700 p-3 rounded text-green-400">https://your-app.onrender.com/dns-query</code>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm mb-2">DoT Hostname</p>
+                        <code class="block bg-gray-700 p-3 rounded text-green-400">your-app.onrender.com:853</code>
+                    </div>
+                    <div class="mt-6 p-4 bg-blue-500/20 border border-blue-500 rounded">
+                        <p class="text-blue-400">💡 Use Android Private DNS or Nebulo/Intra apps to connect via DoH</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
