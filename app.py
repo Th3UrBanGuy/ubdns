@@ -29,6 +29,9 @@ def init_components():
         
         threading.Thread(target=start_tunnel, daemon=True).start()
 
+# Initialize components on import (for gunicorn)
+init_components()
+
 @app.route('/health')
 def health():
     return {'status': 'healthy', 'service': 'doh-adblock-pro'}, 200
@@ -90,7 +93,19 @@ def admin_dashboard():
     blocklist_stats = bl.stats()
     custom_domains = list(bl.custom)
     
-    tunnel_info = cloudflare_tunnel.get_tunnel_info() if cloudflare_tunnel else None
+    # Get tunnel info directly from file
+    try:
+        with open('data/tunnel_url.txt', 'r') as f:
+            tunnel_url = f.read().strip()
+        tunnel_info = {
+            'url': tunnel_url,
+            'running': True,
+            'doh_url': '{}/dns-query'.format(tunnel_url),
+            'admin_url': '{}/admin/login'.format(tunnel_url)
+        } if tunnel_url else None
+    except:
+        tunnel_info = cloudflare_tunnel.get_tunnel_info() if cloudflare_tunnel else None
+    
     nodes = node_manager.get_nodes() if node_manager else {}
     
     return render_template('admin/dashboard.html', 
@@ -156,9 +171,6 @@ def list_nodes():
 def delete_node(node_id):
     node_manager.remove_node(node_id)
     return jsonify({'status': 'removed'}), 200
-
-# Initialize components on import (for gunicorn)
-init_components()
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 8080))
