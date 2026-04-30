@@ -14,8 +14,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-RUN chmod +x start.sh
+RUN chmod +x start.py
 
 EXPOSE 8080
 
-CMD ["sh", "start.sh"]
+CMD ["python", "start.py"]

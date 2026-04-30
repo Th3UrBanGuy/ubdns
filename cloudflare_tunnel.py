@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import re
 
 class CloudflareTunnel:
     def __init__(self):
@@ -16,18 +17,12 @@ class CloudflareTunnel:
             with open(self.tunnel_info_file, 'r') as f:
                 data = json.load(f)
                 self.tunnel_url = data.get('url')
+                self.running = True
         except:
             pass
     
-    def save_tunnel_info(self):
-        with open(self.tunnel_info_file, 'w') as f:
-            json.dump({
-                'url': self.tunnel_url,
-                'updated_at': time.time()
-            }, f)
-    
     def start(self):
-        """Don't start tunnel - it's started by start.sh"""
+        """Don't start tunnel - it's started by start.py"""
         # Just wait for the URL file to appear
         for _ in range(60):
             url = self.get_url()
@@ -46,7 +41,7 @@ class CloudflareTunnel:
         if self.tunnel_url:
             return self.tunnel_url
         
-        # Try to read from file (created by start.sh)
+        # Try to read from file (created by start.py)
         try:
             with open(self.tunnel_url_file, 'r') as f:
                 url = f.read().strip()
@@ -60,7 +55,6 @@ class CloudflareTunnel:
         try:
             with open('data/cloudflared.log', 'r') as f:
                 content = f.read()
-                import re
                 match = re.search(r'https://[a-z0-9-]+\.trycloudflare\.com', content)
                 if match:
                     url = match.group(0)
