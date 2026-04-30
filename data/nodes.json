@@ -1,11 +1,11 @@
 {
   "primary": {
-    "url": "https://pace-seeking-terminals-rabbit.trycloudflare.com",
-    "doh_url": "https://pace-seeking-terminals-rabbit.trycloudflare.com/dns-query",
-    "admin_url": "https://pace-seeking-terminals-rabbit.trycloudflare.com/admin/login",
+    "url": "https://mpegs-register-bow-ctrl.trycloudflare.com",
+    "doh_url": "https://mpegs-register-bow-ctrl.trycloudflare.com/dns-query",
+    "admin_url": "https://mpegs-register-bow-ctrl.trycloudflare.com/admin/login",
     "location": "Cloudflare Tunnel",
-    "registered_at": "2026-04-30T12:31:35.992233",
-    "last_seen": "2026-04-30T12:31:35.992253",
+    "registered_at": "2026-04-30T12:41:25.759695",
+    "last_seen": "2026-04-30T12:41:25.759706",
     "status": "active"
   }
 }
