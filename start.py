@@ -5,6 +5,7 @@ import sys
 import re
 import threading
 import signal
+import json
 
 # Global process trackers
 gunicorn_proc = None
@@ -41,7 +42,6 @@ def extract_tunnel_url(line):
             with open('data/tunnel_url.txt', 'w') as f:
                 f.write(url)
             with open('data/tunnel_info.json', 'w') as f:
-                import json
                 json.dump({'url': url, 'updated_at': time.time()}, f)
             print(f"✅ Tunnel URL: {url}")
             return url
@@ -49,10 +49,24 @@ def extract_tunnel_url(line):
 
 def start_cloudflared():
     global cloudflared_proc, running
+    
+    # Check if using named tunnel (permanent) or quick tunnel
+    tunnel_name = os.getenv('CLOUDFLARE_TUNNEL_NAME')
+    tunnel_token = os.getenv('CLOUDFLARE_TUNNEL_TOKEN')
+    
     while running:
         print("Starting Cloudflare Tunnel...")
-        cmd = ["cloudflared", "tunnel", "--url", "http://localhost:8080", 
-               "--logfile", "data/cloudflared.log"]
+        
+        if tunnel_name and tunnel_token:
+            # Use named tunnel (permanent URL)
+            print(f"Using named tunnel: {tunnel_name}")
+            cmd = ["cloudflared", "tunnel", "--token", tunnel_token, "run"]
+        else:
+            # Use quick tunnel (temporary URL - changes on restart)
+            print("Using quick tunnel (URL will change on restart)")
+            cmd = ["cloudflared", "tunnel", "--url", "http://localhost:8080", 
+                   "--logfile", "data/cloudflared.log"]
+        
         cloudflared_proc = subprocess.Popen(
             cmd,
             stdout=subprocess.PIPE,
@@ -61,7 +75,7 @@ def start_cloudflared():
         )
         print(f"Cloudflared started with PID {cloudflared_proc.pid}")
         
-        # Read output to capture URL
+        # Read output to capture URL (for quick tunnels)
         url_found = False
         try:
             for line in cloudflared_proc.stdout:

@@ -14,6 +14,9 @@ services:
       - ENABLE_NO_LOG=true
       - ADMIN_PASSWORD=726268
       - ENABLE_CLOUDFLARE_TUNNEL=true
+      # For permanent tunnel (optional - requires Cloudflare account)
+      # - CLOUDFLARE_TUNNEL_NAME=my-tunnel
+      # - CLOUDFLARE_TUNNEL_TOKEN=your-tunnel-token
     volumes:
       - ./data:/app/data
     restart: unless-stopped
