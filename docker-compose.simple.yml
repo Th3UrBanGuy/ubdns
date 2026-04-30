@@ -16,7 +16,6 @@ services:
       - ENABLE_CLOUDFLARE_TUNNEL=true
     volumes:
       - ./data:/app/data
-      - ./cloudflared/config.yml:/etc/cloudflared/config.yml
     restart: unless-stopped
     cap_add:
       - NET_ADMIN
