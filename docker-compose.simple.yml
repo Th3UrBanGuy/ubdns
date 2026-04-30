@@ -1,15 +1,14 @@
-services:`
-  dns-gateway:`
-    build:`
-      context: .`
-      dockerfile: Dockerfile.simple`
-    container_name: ubdns-simple`
-    ports:`
-      - "8080:8080"`
-    env_file:`
-      - .env`
-    volumes:`
-      - ./data:/app/data`
-    restart: unless-stopped`
-    cap_add:`
-      - NET_ADMIN`
+services:
+  dns-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.simple;
+    container_name: ubdns-simple;
+    ports:
+      - "8080:8080";
+    env_file: .env;
+    volumes:
+      - ./data:/app/data;
+    restart: unless-stopped;
+    cap_add:
+      - NET_ADMIN;
