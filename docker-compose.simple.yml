@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3'
 
 services:
   dns-gateway:
@@ -14,11 +14,9 @@ services:
       - ENABLE_NO_LOG=true
       - ADMIN_PASSWORD=726268
       - ENABLE_CLOUDFLARE_TUNNEL=true
-      # For permanent tunnel (optional - requires Cloudflare account)
-      # - CLOUDFLARE_TUNNEL_NAME=my-tunnel
-      # - CLOUDFLARE_TUNNEL_TOKEN=your-tunnel-token
     volumes:
       - ./data:/app/data
+      - ./cloudflared/config.yml:/etc/cloudflared/config.yml
     restart: unless-stopped
     cap_add:
       - NET_ADMIN

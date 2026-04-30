@@ -1,11 +1,11 @@
 {
   "primary": {
-    "url": "https://mpegs-register-bow-ctrl.trycloudflare.com",
-    "doh_url": "https://mpegs-register-bow-ctrl.trycloudflare.com/dns-query",
-    "admin_url": "https://mpegs-register-bow-ctrl.trycloudflare.com/admin/login",
+    "url": "https://connect-biology-additions-missile.trycloudflare.com",
+    "doh_url": "https://connect-biology-additions-missile.trycloudflare.com/dns-query",
+    "admin_url": "https://connect-biology-additions-missile.trycloudflare.com/admin/login",
     "location": "Cloudflare Tunnel",
-    "registered_at": "2026-04-30T12:41:25.759695",
-    "last_seen": "2026-04-30T12:41:25.759706",
+    "registered_at": "2026-04-30T15:00:16.862340",
+    "last_seen": "2026-04-30T15:00:16.862352",
     "status": "active"
   }
 }

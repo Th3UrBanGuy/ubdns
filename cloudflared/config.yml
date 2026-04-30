@@ -1,0 +1,7 @@
+tunnel: 1358426b-176a-4c73-916b-7e4b1fa1bb17
+credentials-file: /root/.cloudflared/1358426b-176a-4c73-916b-7e4b1fa1bb17.json
+
+ingress:
+  - hostname: dns.ubdns.yourdomain.com
+    service: http://localhost:8080
+  - service: http_status:404
