@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, session, redirect, url_for, render_template, jsonify, flash
+from flask import Flask, request, session, redirect, url_for, render_template, jsonify
 from flask_socketio import SocketIO
 from config import Config
 import threading
@@ -8,7 +8,6 @@ app = Flask(__name__)
 app.secret_key = Config.SECRET_KEY
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
-# Initialize components
 cloudflare_tunnel = None
 node_manager = None
 
@@ -21,17 +20,14 @@ def init_components():
     cloudflare_tunnel = CloudflareTunnel()
     node_manager = NodeManager()
     
-    # Start Cloudflare Tunnel if enabled
     if os.getenv('ENABLE_CLOUDFLARE_TUNNEL', 'false').lower() == 'true':
         def start_tunnel():
             url = cloudflare_tunnel.start()
             if url:
                 node_manager.register_node('primary', url, 'Cloudflare Tunnel')
-                print(f"🌐 Public URL: {url}")
+                print("Public URL: {}".format(url))
         
         threading.Thread(target=start_tunnel, daemon=True).start()
-
-# ==================== ROUTES ====================
 
 @app.route('/health')
 def health():
@@ -42,7 +38,11 @@ def doh_endpoint():
     from core.resolver import resolve_doh
     return resolve_doh()
 
-# ==================== ADMIN ROUTES ====================
+@app.route('/tunnel-info')
+def tunnel_info():
+    if cloudflare_tunnel:
+        return jsonify(cloudflare_tunnel.get_tunnel_info())
+    return jsonify({'url': None})
 
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
@@ -74,10 +74,7 @@ def admin_dashboard():
     blocklist_stats = bl.stats()
     custom_domains = list(bl.custom)
     
-    # Get tunnel info
     tunnel_info = cloudflare_tunnel.get_tunnel_info() if cloudflare_tunnel else None
-    
-    # Get all nodes
     nodes = node_manager.get_nodes() if node_manager else {}
     
     return render_template('admin/dashboard.html', 
@@ -122,11 +119,8 @@ def refresh():
     threading.Thread(target=bl.load, daemon=True).start()
     return redirect(url_for('admin_dashboard'))
 
-# ==================== NODE MANAGEMENT API ====================
-
 @app.route('/api/nodes/register', methods=['POST'])
 def register_node():
-    """Register a new node"""
     data = request.json
     node_id = data.get('node_id')
     url = data.get('url')
@@ -140,16 +134,12 @@ def register_node():
 
 @app.route('/api/nodes', methods=['GET'])
 def list_nodes():
-    """List all nodes"""
     return jsonify(node_manager.get_nodes())
 
 @app.route('/api/nodes/<node_id>', methods=['DELETE'])
 def delete_node(node_id):
-    """Remove a node"""
     node_manager.remove_node(node_id)
     return jsonify({'status': 'removed'}), 200
-
-# ==================== MAIN ====================
 
 if __name__ == '__main__':
     init_components()

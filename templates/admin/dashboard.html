@@ -19,23 +19,41 @@
         <!-- Public URLs Banner -->
         {% if tunnel_info and tunnel_info.url %}
         <div class="bg-gradient-to-r from-green-500 to-blue-500 p-6 rounded-xl shadow-2xl mb-8">
-            <h2 class="text-2xl font-bold mb-4">🌐 Public Access URLs</h2>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">🌐 Public Access URLs</h2>
+                <span class="px-3 py-1 bg-white/20 rounded-full text-sm">Active</span>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-white/20 p-4 rounded-lg">
-                    <p class="text-sm font-bold mb-2">DoH Endpoint</p>
-                    <code class="text-xs break-all">{{ tunnel_info.doh_url }}</code>
-                    <button onclick="copyToClipboard('{{ tunnel_info.doh_url }}')" class="ml-2 text-xs underline">Copy</button>
+                    <p class="text-sm font-bold mb-2">🛡️ DoH Endpoint</p>
+                    <code class="text-xs break-all block mb-2">{{ tunnel_info.doh_url }}</code>
+                    <button onclick="copyToClipboard('{{ tunnel_info.doh_url }}')" 
+                            class="bg-white/30 hover:bg-white/40 px-3 py-1 rounded text-xs">
+                        📋 Copy URL
+                    </button>
                 </div>
                 <div class="bg-white/20 p-4 rounded-lg">
-                    <p class="text-sm font-bold mb-2">Admin Panel</p>
-                    <code class="text-xs break-all">{{ tunnel_info.admin_url }}</code>
-                    <button onclick="copyToClipboard('{{ tunnel_info.admin_url }}')" class="ml-2 text-xs underline">Copy</button>
+                    <p class="text-sm font-bold mb-2">🔐 Admin Panel</p>
+                    <code class="text-xs break-all block mb-2">{{ tunnel_info.admin_url }}</code>
+                    <button onclick="copyToClipboard('{{ tunnel_info.admin_url }}')" 
+                            class="bg-white/30 hover:bg-white/40 px-3 py-1 rounded text-xs">
+                        📋 Copy URL
+                    </button>
                 </div>
                 <div class="bg-white/20 p-4 rounded-lg">
-                    <p class="text-sm font-bold mb-2">Custom Domain</p>
-                    <p class="text-xs">Use Cloudflare Dashboard to add custom domain</p>
+                    <p class="text-sm font-bold mb-2">📱 Android Setup</p>
+                    <p class="text-xs">Use this hostname in Private DNS:</p>
+                    <code class="text-xs block mt-1">{{ tunnel_info.url|replace('https://', '') }}</code>
                 </div>
             </div>
+        </div>
+        {% else %}
+        <div class="bg-yellow-500/20 border border-yellow-500 p-6 rounded-xl mb-8">
+            <h2 class="text-xl font-bold mb-2">⏳ Tunnel Starting...</h2>
+            <p class="text-sm">Cloudflare Tunnel is initializing. Refresh in a few seconds.</p>
+            <button onclick="location.reload()" class="mt-4 bg-yellow-500 hover:bg-yellow-600 text-black px-4 py-2 rounded">
+                🔄 Refresh Page
+            </button>
         </div>
         {% endif %}
         
@@ -159,14 +177,20 @@
     </div>
     
     <script>
-        // Copy to clipboard
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                alert('Copied to clipboard!');
-            });
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('✅ Copied to clipboard!');
+                });
+            }
         }
         
-        // Query Chart
+        {% if not tunnel_info or not tunnel_info.url %}
+        setTimeout(() => {
+            location.reload();
+        }, 5000);
+        {% endif %}
+        
         const ctx = document.getElementById('queryChart').getContext('2d');
         new Chart(ctx, {
             type: 'doughnut',

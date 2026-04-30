@@ -3,25 +3,47 @@ import subprocess
 import json
 import time
 import threading
-from flask import current_app
+import re
 
 class CloudflareTunnel:
     def __init__(self):
         self.tunnel_url = None
         self.process = None
         self.running = False
-        
-    def start(self):
-        """Start cloudflared tunnel"""
+        self.tunnel_info_file = 'data/tunnel_info.json'
+        os.makedirs(os.path.dirname(self.tunnel_info_file), exist_ok=True)
+        self.load_tunnel_info()
+    
+    def load_tunnel_info(self):
         try:
-            # Check if cloudflared is installed
+            with open(self.tunnel_info_file, 'r') as f:
+                data = json.load(f)
+                self.tunnel_url = data.get('url')
+        except:
+            pass
+    
+    def save_tunnel_info(self):
+        with open(self.tunnel_info_file, 'w') as f:
+            json.dump({
+                'url': self.tunnel_url,
+                'updated_at': time.time()
+            }, f)
+    
+    def start(self):
+        """Start cloudflared tunnel and capture URL"""
+        try:
             subprocess.run(['which', 'cloudflared'], check=True, capture_output=True)
         except subprocess.CalledProcessError:
             print("cloudflared not found, attempting to install...")
             self._install_cloudflared()
         
-        # Start tunnel
-        cmd = ['cloudflared', 'tunnel', '--url', f'http://localhost:{os.getenv("PORT", 8080)}']
+        if os.path.exists(self.tunnel_info_file):
+            os.remove(self.tunnel_info_file)
+        
+        port = os.getenv("PORT", "8080")
+        cmd = ['cloudflared', 'tunnel', '--url', 
+               'http://localhost:{}'.format(port),
+               '--logfile', 'data/cloudflared.log']
         
         def run_tunnel():
             self.process = subprocess.Popen(
@@ -34,20 +56,20 @@ class CloudflareTunnel:
             self.running = True
             
             for line in self.process.stdout:
-                print(f"[cloudflared] {line.strip()}")
-                # Extract tunnel URL
-                if 'trycloudflare.com' in line or 'https://' in line:
-                    import re
+                print("[cloudflared] {}".format(line.strip()))
+                if 'trycloudflare.com' in line:
                     match = re.search(r'https://[a-z0-9-]+\.trycloudflare\.com', line)
                     if match:
                         self.tunnel_url = match.group(0)
-                        print(f"✅ Tunnel URL: {self.tunnel_url}")
+                        self.save_tunnel_info()
+                        print("Tunnel URL: {}".format(self.tunnel_url))
+                        with open('data/tunnel_url.txt', 'w') as f:
+                            f.write(self.tunnel_url)
         
         thread = threading.Thread(target=run_tunnel, daemon=True)
         thread.start()
         
-        # Wait for URL
-        for _ in range(30):
+        for _ in range(60):
             if self.tunnel_url:
                 return self.tunnel_url
             time.sleep(1)
@@ -60,10 +82,27 @@ class CloudflareTunnel:
             self.running = False
     
     def get_url(self):
-        return self.tunnel_url
+        if self.tunnel_url:
+            return self.tunnel_url
+        
+        try:
+            with open('data/tunnel_url.txt', 'r') as f:
+                return f.read().strip()
+        except:
+            pass
+        
+        try:
+            with open('data/cloudflared.log', 'r') as f:
+                content = f.read()
+                match = re.search(r'https://[a-z0-9-]+\.trycloudflare\.com', content)
+                if match:
+                    return match.group(0)
+        except:
+            pass
+        
+        return None
     
     def _install_cloudflared(self):
-        """Install cloudflared binary"""
         import platform
         system = platform.system().lower()
         arch = platform.machine().lower()
@@ -73,19 +112,20 @@ class CloudflareTunnel:
         elif 'arm' in arch:
             arch = 'arm64'
         
-        url = f'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-{system}-{arch}'
+        url = 'https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-{}'.format(arch)
         
         try:
-            subprocess.run(['wget', '-O', '/usr/local/bin/cloudflared', url], check=True)
+            subprocess.run(['curl', '-L', '-o', '/usr/local/bin/cloudflared', url], check=True)
             subprocess.run(['chmod', '+x', '/usr/local/bin/cloudflared'], check=True)
-            print("✅ cloudflared installed")
+            print("cloudflared installed")
         except Exception as e:
-            print(f"Failed to install cloudflared: {e}")
+            print("Failed to install cloudflared: {}".format(e))
             
     def get_tunnel_info(self):
+        url = self.get_url()
         return {
-            'url': self.tunnel_url,
+            'url': url,
             'running': self.running,
-            'doh_url': f"{self.tunnel_url}/dns-query" if self.tunnel_url else None,
-            'admin_url': f"{self.tunnel_url}/admin/login" if self.tunnel_url else None
+            'doh_url': '{}/dns-query'.format(url) if url else None,
+            'admin_url': '{}/admin/login'.format(url) if url else None
         }
