@@ -1,13 +1,13 @@
-import subprocess
-import time
-import os
-import sys
-import re
+import subprocess`
+import time`
+import os`
+import sys`
+import re`
 import threading`
 import signal`
 import json`
 
-# Global process trackers
+# Global process trackers`
 gunicorn_proc = None`
 cloudflared_proc = None`
 running = True`
@@ -38,33 +38,28 @@ def extract_tunnel_url(line):`
         match = re.search(r'https://[a-z0-9-]+\.trycloudflare\.com', line)`
         if match:`
             url = match.group(0)`
-            # Save URL to files`
             with open('data/tunnel_url.txt', 'w') as f:`
                 f.write(url)`
             with open('data/tunnel_info.json', 'w') as f:`
                 json.dump({'url': url, 'updated_at': time.time()}, f)`
-            print(f"✅ Tunnel URL: {url}")`
+            print(f"Tunnel URL: {url}")`
             return url`
     return None`
 
 def start_cloudflared():`
     global cloudflared_proc, running`
     
-    # Check if config.yml exists (permanent tunnel)`
     config_exists = os.path.exists('/etc/cloudflared/config.yml')`
-    config2_exists = os.path.exists('/root/.cloudflared/config.yml')`
     
     while running:`
         print("Starting Cloudflare Tunnel...")`
         
-        if config_exists or config2_exists:`
-            # Use permanent tunnel from config.yml`
+        if config_exists:`
             print("Using PERMANENT tunnel from config.yml")`
             cmd = ["cloudflared", "tunnel", "run"]`
         else:`
-            # No config - use quick tunnel (temporary)`
             print("WARNING: Using QUICK tunnel (URL will change on restart!)")`
-            cmd = ["cloudflared", "tunnel", "--url", "http://localhost:8080", `
+            cmd = ["cloudflared", "tunnel", "--url", "http://localhost:8080", 
                    "--logfile", "data/cloudflared.log"]`
         
         cloudflared_proc = subprocess.Popen(`
@@ -75,16 +70,14 @@ def start_cloudflared():`
         )`
         print(f"Cloudflared started with PID {cloudflared_proc.pid}")`
         
-        # Read output to capture URL (for quick tunnels)`
         try:`
             for line in cloudflared_proc.stdout:`
                 extract_tunnel_url(line)`
                 if not running:`
                     break`
         except Exception as e:`
-            print(f"Error reading cloudflared output: {e}")`
+            print(f"Error: {e}")`
         
-        # Wait for process to finish`
         retcode = cloudflared_proc.wait()`
         print(f"Cloudflared exited with code {retcode}")`
         
@@ -95,16 +88,13 @@ def start_cloudflared():`
         time.sleep(5)`
 
 if __name__ == '__main__':`
-    # Start gunicorn`
     gunicorn_proc = start_gunicorn()`
     
-    # Start cloudflared in a separate thread`
     cloudflared_thread = threading.Thread(target=start_cloudflared, daemon=True)`
     cloudflared_thread.start()`
     
-    print("All services started. Waiting for processes...")`
+    print("All services started. Waiting...")`
     
-    # Wait for gunicorn (main process)`
     try:`
         gunicorn_proc.wait()`
     except KeyboardInterrupt:`
