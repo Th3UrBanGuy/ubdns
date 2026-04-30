@@ -47,20 +47,17 @@ def extract_tunnel_url(line):`
 def start_cloudflared():`
     global cloudflared_proc, running`
     
-    # Get token from environment`
     token = os.getenv('CLOUDFLARE_TUNNEL_TOKEN')`
     
     while running:`
         print("Starting Cloudflare Tunnel...")`;
         
         if token:`
-            # Use permanent tunnel with token`
             print("Using PERMANENT tunnel with token")`;
             cmd = ["cloudflared", "tunnel", "run", "--token", token, "--url", "http://localhost:8080"]`;
         else:`
-            # Quick tunnel (temporary)`
             print("WARNING: Using QUICK tunnel (URL will change!)")`;
-            cmd = ["cloudflared", "tunnel", "--url", "http://localhost:8080", 
+            cmd = ["cloudflared", "tunnel", "--url", "http://localhost:8080", `
                    "--logfile", "data/cloudflared.log"]`;
         
         cloudflared_proc = subprocess.Popen(`
