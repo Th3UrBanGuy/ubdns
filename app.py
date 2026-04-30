@@ -141,7 +141,9 @@ def delete_node(node_id):
     node_manager.remove_node(node_id)
     return jsonify({'status': 'removed'}), 200
 
+# Initialize components on import (for gunicorn)
+init_components()
+
 if __name__ == '__main__':
-    init_components()
     port = int(os.getenv('PORT', 8080))
     socketio.run(app, host='0.0.0.0', port=port, debug=False)
