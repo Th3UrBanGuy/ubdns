@@ -1,0 +1,11 @@
+{
+  "primary": {
+    "url": "https://pace-seeking-terminals-rabbit.trycloudflare.com",
+    "doh_url": "https://pace-seeking-terminals-rabbit.trycloudflare.com/dns-query",
+    "admin_url": "https://pace-seeking-terminals-rabbit.trycloudflare.com/admin/login",
+    "location": "Cloudflare Tunnel",
+    "registered_at": "2026-04-30T12:31:35.992233",
+    "last_seen": "2026-04-30T12:31:35.992253",
+    "status": "active"
+  }
+}
