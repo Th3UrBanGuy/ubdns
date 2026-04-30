@@ -2,19 +2,18 @@ services:
   dns-gateway:
     build:
       context: .
-      dockerfile: Dockerfile.simple
-    cap_add:
-    - NET_ADMIN
-    container_name: ubdns-simple
-    environment:
-    - PYTHON_VERSION=3.11
-    - PORT=8080
-    - ENABLE_NO_LOG=true
-    - ADMIN_PASSWORD=726268
-    - ENABLE_CLOUDFLARE_TUNNEL=true
+      dockerfile: Dockerfile.simple:
+    container_name: ubdns-simple:
     ports:
-    - 8080:8080
-    restart: unless-stopped
-    volumes:
-    - ./data:/app/data
-version: '3.8'
+      - "8080:8080"
+    environment::
+      - PYTHON_VERSION=3.11::
+      - PORT=8080::
+      - ENABLE_NO_LOG=true::
+      - ADMIN_PASSWORD=726268::
+      - ENABLE_CLOUDFLARE_TUNNEL=true::
+    volumes::
+      - ./data:/app/data::
+    restart: unless-stopped::
+    cap_add::
+      - NET_ADMIN::
