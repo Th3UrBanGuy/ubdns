@@ -14,3 +14,5 @@ services:
         value: "true"
       - key: OBFUSCATE_QUERIES
         value: "true"
+      - key: EVENTLET_NO_GREENDNS
+        value: "yes"

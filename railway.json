@@ -14,7 +14,8 @@
         "PYTHON_VERSION": "3.11",
         "ENABLE_NO_LOG": "true",
         "STRIP_CLIENT_IP": "true",
-        "OBFUSCATE_QUERIES": "true"
+        "OBFUSCATE_QUERIES": "true",
+        "EVENTLET_NO_GREENDNS": "yes"
       }
     }
   }

@@ -16,6 +16,12 @@ A hacker-grade DNS gateway with **Cloudflare Tunnel** for public access, **multi
 - ✅ Auto-registration API for new nodes
 - ✅ Health monitoring per node
 
+### ⚡ Super-Fast Resolution
+- ✅ **Parallel upstreams** - every query races Cloudflare + Google + Quad9 at once; the first valid answer wins, so latency = the *fastest* resolver and a single dead/slow upstream never stalls you
+- ✅ **Shared TTL-aware cache** - repeat lookups served from memory in well under a millisecond (Redis-backed when `REDIS_URL` is set, so the cache is shared across workers/nodes)
+- ✅ **Connection pooling** - HTTP keep-alive to upstreams removes per-query TLS handshakes
+- ✅ Singleton resolver/analytics so the cache and stats actually persist between requests
+
 ### Advanced DNS Features
 - ✅ DNS-over-HTTPS (DoH) - Firewall bypass
 - ✅ DNS-over-TLS (DoT) - Available on VPS
@@ -102,6 +108,13 @@ Visit main dashboard → "Connected Nodes" section
 | `ENABLE_CLOUDFLARE_TUNNEL` | `false` | Auto-start Cloudflare Tunnel |
 | `ENABLE_NO_LOG` | `true` | Zero logging mode |
 | `STRIP_CLIENT_IP` | `true` | Hash client IPs |
+| `UPSTREAM_DOH_SERVERS` | `cloudflare,google,quad9` | Comma-separated DoH JSON endpoints to race |
+| `UPSTREAM_MODE` | `parallel` | `parallel` (race all) or `sequential` (failover) |
+| `UPSTREAM_TIMEOUT` | `2` | Per-query upstream timeout (seconds) |
+| `CACHE_TTL_MIN` / `CACHE_TTL_MAX` | `60` / `86400` | Cache TTL clamp (honors record TTL) |
+| `CACHE_MAX_ENTRIES` | `50000` | Max in-memory cache entries |
+| `REDIS_URL` | _(unset)_ | Enable shared Redis-backed cache |
+| `EVENTLET_NO_GREENDNS` | `yes` | Use the OS resolver (more reliable upstream DNS) |
 
 ## 📊 Dashboard Features
 
