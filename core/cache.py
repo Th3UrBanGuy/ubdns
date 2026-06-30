@@ -25,6 +25,13 @@ class SmartCache:
         if self.redis:
             self.redis.setex(f"dns_cache:{key}", ttl, json.dumps(data))
         else:
+            max_entries = getattr(Config, 'CACHE_MAX_ENTRIES', 50000)
+            if len(self.cache) >= max_entries and key not in self.cache:
+                self.clear_expired()
+                # Still full after pruning expired: evict the oldest entry.
+                if len(self.cache) >= max_entries:
+                    oldest = min(self.cache, key=lambda k: self.cache[k][1])
+                    del self.cache[oldest]
             self.cache[key] = (data, time.time() + ttl)
     
     def clear_expired(self):

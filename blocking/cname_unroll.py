@@ -5,7 +5,7 @@ class CNAMEUnroller:
     def __init__(self):
         self.cache = {}
     
-    async def should_block(self, domain):
+    def should_block(self, domain):
         try:
             # Resolve and check CNAME chain
             resp = requests.post(

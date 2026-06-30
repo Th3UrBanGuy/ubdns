@@ -24,6 +24,9 @@ WORKDIR /app
 
 COPY . /app/
 
+# Use the OS resolver instead of eventlet's greendns (more reliable upstream DNS).
+ENV EVENTLET_NO_GREENDNS=yes
+
 EXPOSE 8080
 
 CMD ["gunicorn", "-k", "eventlet", "-b", "0.0.0.0:8080", "app:app"]
