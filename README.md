@@ -43,7 +43,7 @@ git clone https://github.com/Th3UrBanGuy/ubdns.git
 cd ubdns
 
 # Start with Cloudflare Tunnel
-echo "726268" | sudo -S docker-compose -f docker-compose.advanced.yml up -d --build
+echo "<your-secure-password>" | sudo -S docker-compose -f docker-compose.advanced.yml up -d --build
 ```
 
 ### Option 2: Manual with Cloudflared
@@ -66,7 +66,7 @@ After deployment, check the dashboard for your **public URLs**:
 
 - **Admin Panel:** `https://xxx.trycloudflare.com/admin/login`
 - **DoH Endpoint:** `https://xxx.trycloudflare.com/dns-query`
-- **Password:** `726268`
+- **Password:** `<your-secure-password>`
 
 ## 📱 Connect Your Devices
 
@@ -104,7 +104,7 @@ Visit main dashboard → "Connected Nodes" section
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `ADMIN_PASSWORD` | `726268` | Admin panel password |
+| `ADMIN_PASSWORD` | `<your-secure-password>` | Admin panel password |
 | `ENABLE_CLOUDFLARE_TUNNEL` | `false` | Auto-start Cloudflare Tunnel |
 | `ENABLE_NO_LOG` | `true` | Zero logging mode |
 | `STRIP_CLIENT_IP` | `true` | Hash client IPs |
